@@ -10,7 +10,7 @@ namespace aspApi.Data
         #region DbSet
         public DbSet<Team> Teams { get; set; }
         public DbSet<User> User { get; set; }
-        
+        public DbSet<TodoItem> TodoItems { get; set; }
 
 
         #endregion
