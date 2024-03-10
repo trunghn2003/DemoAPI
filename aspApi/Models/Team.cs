@@ -12,9 +12,7 @@ namespace aspApi.Models
         public string Name { get; set; }
         public ICollection<User> Users { get; set; }
 
-        //public TodoItem TodoItem { get; set; }
-       /* public int TodoItemId { get; set; } // Required forei*/
-        //public TodoItem TodoItem { get; set; } = null!;
+        public TodoItem TodoItem { get; set; }
 
 
     }

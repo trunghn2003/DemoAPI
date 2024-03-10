@@ -11,7 +11,7 @@ public class TodoItem
     public long TodoItemId { get; set; }
     public string? Name { get; set; }
     public bool IsComplete { get; set; }
-    public int TeamId { get; set; } // Required foreign key property
+    public int TeamId { get; set; } 
     public Team Team { get; set; } = null!;
 
 
