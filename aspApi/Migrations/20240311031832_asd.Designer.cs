@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using aspApi.Data;
 
@@ -11,9 +12,11 @@ using aspApi.Data;
 namespace aspApi.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240311031832_asd")]
+    partial class asd
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -63,27 +66,6 @@ namespace aspApi.Migrations
                     b.ToTable("Teams");
                 });
 
-            modelBuilder.Entity("aspApi.Models.TeamUser", b =>
-                {
-                    b.Property<int>("TeamId")
-                        .HasColumnType("int");
-
-                    b.Property<int>("UserId")
-                        .HasColumnType("int");
-
-                    b.Property<bool>("IsAdmin")
-                        .HasColumnType("bit");
-
-                    b.Property<bool>("IsLeader")
-                        .HasColumnType("bit");
-
-                    b.HasKey("TeamId", "UserId");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("TeamUsers");
-                });
-
             modelBuilder.Entity("aspApi.Models.User", b =>
                 {
                     b.Property<int>("UserId")
@@ -104,11 +86,16 @@ namespace aspApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
+
+                    b.HasIndex("TeamId");
 
                     b.ToTable("User");
                 });
@@ -120,35 +107,18 @@ namespace aspApi.Migrations
                         .HasForeignKey("TeamId");
                 });
 
-            modelBuilder.Entity("aspApi.Models.TeamUser", b =>
+            modelBuilder.Entity("aspApi.Models.User", b =>
                 {
-                    b.HasOne("aspApi.Models.Team", "Team")
-                        .WithMany("TeamUsers")
-                        .HasForeignKey("TeamId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("aspApi.Models.User", "User")
-                        .WithMany("TeamUsers")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Team");
-
-                    b.Navigation("User");
+                    b.HasOne("aspApi.Models.Team", null)
+                        .WithMany("Users")
+                        .HasForeignKey("TeamId");
                 });
 
             modelBuilder.Entity("aspApi.Models.Team", b =>
                 {
-                    b.Navigation("TeamUsers");
-
                     b.Navigation("TodoItems");
-                });
 
-            modelBuilder.Entity("aspApi.Models.User", b =>
-                {
-                    b.Navigation("TeamUsers");
+                    b.Navigation("Users");
                 });
 #pragma warning restore 612, 618
         }

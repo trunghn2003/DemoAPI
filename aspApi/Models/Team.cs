@@ -10,10 +10,13 @@ namespace aspApi.Models
         [Key]
         public int TeamId { get; set; }
         public string Name { get; set; }
-        public ICollection<User> Users { get; set; }
+     
+        public ICollection<TodoItem> TodoItems { get; set; }
 
-        public TodoItem TodoItem { get; set; }
 
+        public ICollection<TeamUser> TeamUsers { get; set; }
 
     }
+
+    
 }

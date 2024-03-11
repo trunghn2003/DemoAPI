@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using aspApi.Data;
 
@@ -11,9 +12,11 @@ using aspApi.Data;
 namespace aspApi.Migrations
 {
     [DbContext(typeof(MyDbContext))]
-    partial class MyDbContextModelSnapshot : ModelSnapshot
+    [Migration("20240311031223_a1")]
+    partial class a1
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -104,11 +107,16 @@ namespace aspApi.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int?>("TeamId")
+                        .HasColumnType("int");
+
                     b.Property<string>("UserName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("UserId");
+
+                    b.HasIndex("TeamId");
 
                     b.ToTable("User");
                 });
@@ -139,11 +147,20 @@ namespace aspApi.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("aspApi.Models.User", b =>
+                {
+                    b.HasOne("aspApi.Models.Team", null)
+                        .WithMany("Users")
+                        .HasForeignKey("TeamId");
+                });
+
             modelBuilder.Entity("aspApi.Models.Team", b =>
                 {
                     b.Navigation("TeamUsers");
 
                     b.Navigation("TodoItems");
+
+                    b.Navigation("Users");
                 });
 
             modelBuilder.Entity("aspApi.Models.User", b =>

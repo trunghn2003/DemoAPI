@@ -18,9 +18,7 @@
             <th>
                 @Html.DisplayNameFor(model => model.IsComplete)
             </th>
-            <th>
-                @Html.DisplayNameFor(model => model.Team)
-            </th>
+            
             <th></th>
         </tr>
     </thead>
@@ -33,9 +31,7 @@
             <td>
                 @Html.DisplayFor(modelItem => item.IsComplete)
             </td>
-            <td>
-                @Html.DisplayFor(modelItem => item.Team.TeamId)
-            </td>
+            
             <td>
                 <a asp-action="Edit" asp-route-id="@item.TodoItemId">Edit</a> |
                 <a asp-action="Details" asp-route-id="@item.TodoItemId">Details</a> |
