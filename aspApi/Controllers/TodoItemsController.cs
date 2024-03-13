@@ -7,6 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using TodoApi.Models;
 using aspApi.Data;
+using Microsoft.AspNetCore.Authorization;
 
 namespace aspApi.Controllers
 {
@@ -45,6 +46,8 @@ namespace aspApi.Controllers
         // PUT: api/TodoItems/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> PutTodoItem(long id, TodoItem todoItem)
         {
             if (id != todoItem.TodoItemId)
@@ -76,6 +79,8 @@ namespace aspApi.Controllers
         // POST: api/TodoItems
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+
         public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem todoItem)
         {
             _context.TodoItems.Add(todoItem);
@@ -86,6 +91,8 @@ namespace aspApi.Controllers
 
         // DELETE: api/TodoItems/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> DeleteTodoItem(long id)
         {
             var todoItem = await _context.TodoItems.FindAsync(id);
@@ -103,6 +110,22 @@ namespace aspApi.Controllers
         private bool TodoItemExists(long id)
         {
             return _context.TodoItems.Any(e => e.TodoItemId == id);
+        }
+        // GET: api/Todo/GetTodoItemsByTeam/{teamId}
+        [HttpGet("GetTodoItemsByTeam/{teamId}")]
+        public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItemsByTeam(int teamId)
+        {
+            // Lấy danh sách TodoItem của một Team dựa trên teamId
+            var todoItems = await _context.Teams
+                .Where(t => t.TeamId == teamId)
+                .SelectMany(t => t.TodoItems)
+                .ToListAsync();
+
+            if (todoItems == null || todoItems.Count == 0)
+            {
+                return NotFound(); // Trả về HTTP 404 Not Found nếu không tìm thấy TodoItem
+            }
+            return Ok(todoItems);
         }
     }
 }

@@ -116,25 +116,37 @@ namespace aspApi.Controllers
         [HttpPost("login")]
         public IActionResult Validate(LoginModel model)
         {
-            var user = _context.User.SingleOrDefault(p => p.UserName == model.Username &&
-            model.Password == p.Password);
+            var user = _context.User.SingleOrDefault(p => p.UserName == model.Username && model.Password == p.Password);
+
             if (user == null)
             {
                 return Ok(new ApiReponse
                 {
                     IsSuccess = false,
                     Message = "Invalid username or password"
-
                 });
             }
+
+            var teamUser = _context.TeamUsers
+                                .Include(tu => tu.Team)
+                                .FirstOrDefault(tu => tu.UserId == user.UserId);
+
+            if (teamUser == null)
+            {
+                // Handle the case where the user is not associated with any team
+                // You might want to return an error response or handle it according to your business logic.
+            }
+
             return Ok(new ApiReponse
             {
-                IsSuccess = true,
-                Message = "Authen sucess",
-                Data = GenerateToken(user)
+                IsSuccess = true, 
+                Message = "Authen success with " + teamUser.Role,
+                //Data = teamUser.Role
+                Data = GenerateToken(user, teamUser.Role)
             });
         }
-        private string GenerateToken(User user)
+
+        private string GenerateToken(User user, string userRole)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
 
@@ -142,10 +154,11 @@ namespace aspApi.Controllers
 
             var tokenDescription = new SecurityTokenDescriptor
             {
-                Subject = new ClaimsIdentity(new[] {
+                Subject = new ClaimsIdentity(new[]
+                {
             new Claim("UserName", user.UserName),
             new Claim("Id", user.UserId.ToString()),
-            new Claim(ClaimTypes.Role, user.Role), // Chỉ định role ở đây
+            new Claim(ClaimTypes.Role, userRole),
             new Claim("TokenId", Guid.NewGuid().ToString())
         }),
                 Expires = DateTime.UtcNow.AddMinutes(1),
@@ -157,9 +170,10 @@ namespace aspApi.Controllers
             return jwtTokenHandler.WriteToken(token);
         }
 
-    
 
-    private bool UserExists(int id)
+
+
+        private bool UserExists(int id)
         {
             return _context.User.Any(e => e.UserId == id);
         }
