@@ -10,6 +10,7 @@ using aspApi.Models;
 using System.Text.Json.Serialization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
+using aspApi.DTO;
 
 namespace aspApi.Controllers
 {
@@ -81,18 +82,49 @@ namespace aspApi.Controllers
         // POST: api/Teams
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
 
-        public async Task<ActionResult<Team>> PostTeam(Team team)
+        //public async Task<ActionResult<Team>> PostTeam(TeamDTO teamDTO)
+        //{
+        //    var team= new Team
+        //    {
+        //        Name = teamDTO.Name
+        //    };
+        //    _context.Teams.Add(team);
+        //    await _context.SaveChangesAsync();  
+        //    return CreatedAtAction(nameof(Team), new {id = team.TeamId}, team);
+        ////    _context.Teams.Add(team);
+        ////    await _context.SaveChangesAsync();
+
+        ////    return CreatedAtAction("GetTeam", new { id = team.TeamId }, team);
+        //}
+        [HttpPost]
+        public async Task<ActionResult<Team>> PostTeam(TeamDTO teamDTO)
         {
+            if (!ModelState.IsValid)
+            {
+                return BadRequest(ModelState);
+            }
+
+            // Map TeamDTO to Team entity
+            var team = new Team
+            {
+                Name = teamDTO.Name
+            };
+
+            // Add and save the new Team entity
             _context.Teams.Add(team);
             await _context.SaveChangesAsync();
 
-            return CreatedAtAction("GetTeam", new { id = team.TeamId }, team);
+            // Return the created Team
+            return CreatedAtAction(nameof(GetTeam), new { id = team.TeamId }, team);
         }
 
-        // DELETE: api/Teams/5
-        [HttpDelete("{id}")]
+        
+    
+
+    // DELETE: api/Teams/5
+    [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
 
         public async Task<IActionResult> DeleteTeam(int id)
