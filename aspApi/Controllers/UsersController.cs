@@ -12,6 +12,7 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
+using aspApi.DTO;
 
 namespace aspApi.Controllers
 {
@@ -86,15 +87,40 @@ namespace aspApi.Controllers
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
 
-        public async Task<ActionResult<User>> PostUser(User user)
+        public async Task<ActionResult<User>> PostUser(CreateUserDTO createUserDTO)
         {
+            var user = new User
+            {
+                Name = createUserDTO.Name,
+                UserName = createUserDTO.UserName,
+                Password = createUserDTO.Password
+             
+            };
+
             _context.User.Add(user);
             await _context.SaveChangesAsync();
 
+            //// Thêm TeamUser cho user
+            //if (createUserDTO.TeamIds != null && createUserDTO.TeamIds.Any())
+            //{
+            //    foreach (var teamId in createUserDTO.TeamIds)
+            //    {
+            //        var teamUser = new TeamUser
+            //        {
+            //            UserId = user.UserId,
+            //            TeamId = teamId,
+            //            Role = "User" 
+            //        };
+            //        _context.TeamUsers.Add(teamUser);
+            //    }
+            //    await _context.SaveChangesAsync();
+            //}
+
             return CreatedAtAction("GetUser", new { id = user.UserId }, user);
         }
+
 
         // DELETE: api/Users/5
         [HttpDelete("{id}")]

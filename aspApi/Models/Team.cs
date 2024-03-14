@@ -11,10 +11,10 @@ namespace aspApi.Models
         public int TeamId { get; set; }
         public string Name { get; set; }
      
-        public ICollection<TodoItem> TodoItems { get; set; }
+        public ICollection<TodoItem> ? TodoItems { get; set; }
 
 
-        public ICollection<TeamUser> TeamUsers { get; set; }
+        public ICollection<TeamUser> ? TeamUsers { get; set; }
 
     }
 

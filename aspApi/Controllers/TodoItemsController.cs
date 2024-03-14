@@ -123,7 +123,7 @@ namespace aspApi.Controllers
 
             if (todoItems == null || todoItems.Count == 0)
             {
-                return NotFound(); // Trả về HTTP 404 Not Found nếu không tìm thấy TodoItem
+                return NotFound();
             }
             return Ok(todoItems);
         }
