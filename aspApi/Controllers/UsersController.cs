@@ -13,6 +13,7 @@ using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using aspApi.DTO;
+using Microsoft.Exchange.WebServices.Data;
 
 namespace aspApi.Controllers
 {
@@ -205,7 +206,9 @@ namespace aspApi.Controllers
             new Claim("UserName", user.UserName),
             new Claim("Id", user.UserId.ToString()),
             new Claim(ClaimTypes.Role, userRole),
-            new Claim("TokenId", Guid.NewGuid().ToString())
+            new Claim("TokenId", Guid.NewGuid().ToString()),
+            new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString())
+
         }),
                 Expires = DateTime.UtcNow.AddMinutes(10),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKeyBytes), SecurityAlgorithms.HmacSha256)
