@@ -24,6 +24,8 @@ namespace aspApi.Controllers
 
         // GET: api/TodoItems
         [HttpGet]
+        [Authorize(Roles = "Admin, User")]
+
         public async Task<ActionResult<IEnumerable<TodoItem>>> GetTodoItems()
         {
             return await _context.TodoItems.ToListAsync();
@@ -31,6 +33,8 @@ namespace aspApi.Controllers
 
         // GET: api/TodoItems/5
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin, User")]
+
         public async Task<ActionResult<TodoItem>> GetTodoItem(long id)
         {
             var todoItem = await _context.TodoItems.FindAsync(id);
@@ -47,6 +51,8 @@ namespace aspApi.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin, User")]
+
 
         public async Task<IActionResult> PutTodoItem(long id, TodoItem todoItem)
         {
@@ -80,6 +86,8 @@ namespace aspApi.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
+
 
         public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem todoItem)
         {

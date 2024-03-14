@@ -27,6 +27,8 @@ namespace aspApi.Controllers
 
         // GET: api/Teams
         [HttpGet]
+        [Authorize(Roles = "Admin, User")]
+
         public async Task<ActionResult<IEnumerable<Team>>> GetTeams()
         {
             return await _context.Teams.ToListAsync();
@@ -34,6 +36,7 @@ namespace aspApi.Controllers
 
         // GET: api/Teams/5
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin, User")]
         public async Task<ActionResult<Team>> GetTeam(int id)
         {
             var team = await _context.Teams.FindAsync(id);
@@ -49,24 +52,22 @@ namespace aspApi.Controllers
         // PUT: api/Teams/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        //[Authorize(Roles = "Admin")]
-
+        [Authorize(Roles = "Admin")]
         public async Task<IActionResult> PutTeam(int id, TeamDTO teamDTO)
         {
             if (id != teamDTO.TeamId)
             {
-                return BadRequest();
+                return BadRequest("Id mismatch between URL and request body.");
             }
 
-            var team = await _context.User.FindAsync(id);
+            var team = await _context.Teams.FindAsync(id);
             if (team == null)
             {
                 return NotFound();
             }
 
-            // Update user properties with values from userDTO
+            // Update team properties with values from teamDTO
             team.Name = teamDTO.Name;
-           
 
             try
             {
@@ -107,6 +108,8 @@ namespace aspApi.Controllers
         ////    return CreatedAtAction("GetTeam", new { id = team.TeamId }, team);
         //}
         [HttpPost]
+        [Authorize(Roles = "Admin")]
+
         public async Task<ActionResult<Team>> PostTeam(TeamDTO teamDTO)
         {
             if (!ModelState.IsValid)
@@ -133,7 +136,7 @@ namespace aspApi.Controllers
 
     // DELETE: api/Teams/5
     [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
+    [Authorize(Roles = "Admin")]
 
         public async Task<IActionResult> DeleteTeam(int id)
         {
@@ -158,6 +161,8 @@ namespace aspApi.Controllers
 
        
         [HttpGet("{id}/users")]
+        [Authorize(Roles = "Admin, User")]
+
         public ActionResult<IEnumerable<UserInTeamDto>> GetUsersForTeam(int id)
         {
             var team = _context.Teams

@@ -7,6 +7,7 @@ using aspApi.Models;
 using aspApi.Data;
 using static aspApi.Controllers.TeamUsersController;
 using aspApi.DTO;
+using Microsoft.AspNetCore.Authorization;
 
 namespace aspApi.Controllers
 {
@@ -23,6 +24,8 @@ namespace aspApi.Controllers
         
         // GET: api/TeamUsers
         [HttpGet]
+        [Authorize(Roles = "Admin, User")]
+
         public async Task<ActionResult<IEnumerable<TeamUser>>> GetTeamUsers()
         {
             return await _context.TeamUsers.ToListAsync();
@@ -44,6 +47,7 @@ namespace aspApi.Controllers
 
         // POST: api/TeamUsers
         [HttpPost]
+        [Authorize(Roles = "Admin")]
         public async Task<ActionResult<TeamUser>> PostTeamUser(TeamUserDto teamUserDto)
         {
             var team = await _context.Teams.FindAsync(teamUserDto.TeamId);
@@ -76,12 +80,14 @@ namespace aspApi.Controllers
             _context.TeamUsers.Add(teamUser);
             await _context.SaveChangesAsync();
 
-            // Return the created TeamUserDTO
-            return CreatedAtAction("GetTeamUser", new { id = teamUser.TeamId }, teamUserDto);
+            // Return the created TeamUser entity
+            return CreatedAtAction("Get ", new { id = teamUser.TeamId }, teamUser);
         }
 
         // DELETE: api/TeamUsers/5
         [HttpDelete("{id}")]
+        [Authorize(Roles = "Admin")]
+
         public async Task<IActionResult> DeleteTeamUser(int id)
         {
             var teamUser = await _context.TeamUsers.FindAsync(id);

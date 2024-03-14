@@ -30,6 +30,8 @@ namespace aspApi.Controllers
 
         // GET: api/Users
         [HttpGet]
+        [Authorize(Roles = "Admin, User")]
+
 
         public async Task<ActionResult<IEnumerable<User>>> GetUser()
         {
@@ -38,6 +40,8 @@ namespace aspApi.Controllers
 
         // GET: api/Users/5
         [HttpGet("{id}")]
+        [Authorize(Roles = "Admin, User")]
+
         public async Task<ActionResult<User>> GetUser(int id)
         {
             var user = await _context.User.FindAsync(id);
@@ -54,6 +58,8 @@ namespace aspApi.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
+
 
 
         public async Task<IActionResult> PutUser(int id, UserDTO userDTO)
@@ -100,6 +106,8 @@ namespace aspApi.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         //[Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
+
 
         public async Task<ActionResult<User>> PostUser(UserDTO createUserDTO)
         {
@@ -199,7 +207,7 @@ namespace aspApi.Controllers
             new Claim(ClaimTypes.Role, userRole),
             new Claim("TokenId", Guid.NewGuid().ToString())
         }),
-                Expires = DateTime.UtcNow.AddMinutes(1),
+                Expires = DateTime.UtcNow.AddMinutes(10),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKeyBytes), SecurityAlgorithms.HmacSha256)
             };
 
