@@ -210,7 +210,7 @@ namespace aspApi.Controllers
             new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString())
 
         }),
-                Expires = DateTime.UtcNow.AddMinutes(10),
+                Expires = DateTime.UtcNow.AddMinutes(100),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(secretKeyBytes), SecurityAlgorithms.HmacSha256)
             };
 

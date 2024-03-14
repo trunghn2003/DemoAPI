@@ -11,6 +11,7 @@ using System.Text.Json.Serialization;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using aspApi.DTO;
+using System.Security.Claims;
 
 namespace aspApi.Controllers
 {
@@ -90,7 +91,7 @@ namespace aspApi.Controllers
 
         // POST: api/Teams
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        //[HttpPost]
         //[Authorize(Roles = "Admin")]
 
         //public async Task<ActionResult<Team>> PostTeam(TeamDTO teamDTO)
@@ -159,12 +160,12 @@ namespace aspApi.Controllers
             
         }
 
-       
+
         [HttpGet("{id}/users")]
         [Authorize(Roles = "Admin, User")]
-
         public ActionResult<IEnumerable<UserInTeamDto>> GetUsersForTeam(int id)
         {
+            var currentUser = HttpContext.User;
             var team = _context.Teams
                                 .Include(t => t.TeamUsers)
                                     .ThenInclude(tu => tu.User)
@@ -172,19 +173,94 @@ namespace aspApi.Controllers
 
             if (team == null)
             {
-                return NotFound(); 
+                return NotFound("Team not found");
             }
+            if (!team.IsPublic)
+            {
+                if (!IsUserAuthorizedForTeam(currentUser, team))
+                {
+                    return Forbid("may ko thuoc ve team nay"); // Hoặc NotFound() tùy thuộc vào logic ứng dụng của bạn
+                }
+            }
+            
+
+            // Kiểm tra xem người dùng có quyền truy cập vào nhóm không
+           
 
             var usersInTeam = team.TeamUsers.Select(tu => new UserInTeamDto
             {
                 UserId = tu.User.UserId,
                 UserName = tu.User.UserName,
                 Role = tu.Role
-              
             }).ToList();
 
             return Ok(usersInTeam);
         }
+        [HttpPut("{id}/privacy")]
+        [Authorize(Roles = "Admin")]
+        public async Task<IActionResult> UpdateTeamPrivacy(int id, bool isPublic)
+        {
+            var team = await _context.Teams
+                .Include(t => t.TeamUsers)
+                .FirstOrDefaultAsync(t => t.TeamId == id);
+
+            if (team == null)
+            {
+                return NotFound("Team not found");
+            }
+
+            var userId = GetUserIdFromClaims(HttpContext.User);
+            Console.WriteLine(userId);
+
+            if(IsUserAuthorizedForTeam(HttpContext.User, team) == false)
+            {
+                return BadRequest("it doesnt belong to this team");
+            }
+            
+
+            team.IsPublic = isPublic;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Team privacy updated successfully" });
+        }
+
+
+        private bool IsUserAuthorizedForTeam(ClaimsPrincipal user, Team team)
+        {
+            // Kiểm tra xem người dùng có vai trò "Admin" không
+            /* if (user.IsInRole("Admin"))
+             {
+                 return true;
+             }*/
+
+            // Kiểm tra xem người dùng có là thành viên của nhóm không
+            var userId = GetUserIdFromClaims(user);
+            var teamId = team.TeamId;
+            Console.WriteLine(userId + " " + teamId);
+            var teamUser = team.TeamUsers;
+            foreach (var i in teamUser)
+            {
+                    Console.WriteLine(teamId + " " + userId);   
+                if (i.UserId == userId && i.TeamId == teamId)
+                {
+                    return true;
+                }
+             
+            }
+            return false;
+        }
+
+        private int GetUserIdFromClaims(ClaimsPrincipal user)
+        {
+            // Lấy UserId từ Claims của người dùng, bạn cần điều chỉnh logic này tùy thuộc vào cách bạn thực hiện xác thực
+            var userIdClaim = user.FindFirst(ClaimTypes.NameIdentifier);
+            if (userIdClaim != null && int.TryParse(userIdClaim.Value, out int userId))
+            {
+                return userId;
+            }
+            return -1; // hoặc ném ra một exception, tùy thuộc vào yêu cầu của ứng dụng
+        }
+
 
 
 

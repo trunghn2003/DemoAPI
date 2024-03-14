@@ -10,7 +10,7 @@ namespace aspApi.Models
         [Key]
         public int TeamId { get; set; }
         public string Name { get; set; }
-     
+        public bool IsPublic { get; set; } = false;
         public ICollection<TodoItem> ? TodoItems { get; set; }
 
 
