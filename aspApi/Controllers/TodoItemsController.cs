@@ -79,7 +79,7 @@ namespace aspApi.Controllers
         // POST: api/TodoItems
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
 
         public async Task<ActionResult<TodoItem>> PostTodoItem(TodoItem todoItem)
         {

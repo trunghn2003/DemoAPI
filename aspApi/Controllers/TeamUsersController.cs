@@ -29,18 +29,18 @@ namespace aspApi.Controllers
         }
 
         // GET: api/TeamUsers/5
-        [HttpGet("{id}")]
-        public async Task<ActionResult<TeamUser>> GetTeamUser(int id)
-        {
-            var teamUser = await _context.TeamUsers.FindAsync(id);
+        //[HttpGet("{id}")]
+        //public async Task<ActionResult<TeamUser>> GetTeamUser(int id)
+        //{
+        //    var teamUser = await _context.TeamUsers.FindAsync(id);
 
-            if (teamUser == null)
-            {
-                return NotFound();
-            }
+        //    if (teamUser == null)
+        //    {
+        //        return NotFound();
+        //    }
 
-            return teamUser;
-        }
+        //    return teamUser;
+        //}
 
         // POST: api/TeamUsers
         [HttpPost]
@@ -77,7 +77,7 @@ namespace aspApi.Controllers
             await _context.SaveChangesAsync();
 
             // Return the created TeamUserDTO
-            return CreatedAtAction(nameof(GetTeamUser), new { id = teamUser.TeamId }, teamUserDto);
+            return CreatedAtAction("GetTeamUser", new { id = teamUser.TeamId }, teamUserDto);
         }
 
         // DELETE: api/TeamUsers/5

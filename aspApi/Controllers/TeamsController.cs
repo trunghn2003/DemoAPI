@@ -49,16 +49,24 @@ namespace aspApi.Controllers
         // PUT: api/Teams/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
 
-        public async Task<IActionResult> PutTeam(int id, Team team)
+        public async Task<IActionResult> PutTeam(int id, TeamDTO teamDTO)
         {
-            if (id != team.TeamId)
+            if (id != teamDTO.TeamId)
             {
                 return BadRequest();
             }
 
-            _context.Entry(team).State = EntityState.Modified;
+            var team = await _context.User.FindAsync(id);
+            if (team == null)
+            {
+                return NotFound();
+            }
+
+            // Update user properties with values from userDTO
+            team.Name = teamDTO.Name;
+           
 
             try
             {
