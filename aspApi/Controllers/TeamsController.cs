@@ -166,10 +166,10 @@ namespace aspApi.Controllers
         public ActionResult<IEnumerable<UserInTeamDto>> GetUsersForTeam(int id)
         {
             var currentUser = HttpContext.User;
-            var team = _context.Teams
-                                .Include(t => t.TeamUsers)
-                                    .ThenInclude(tu => tu.User)
-                                .FirstOrDefault(t => t.TeamId == id);
+                var team = _context.Teams
+                                    .Include(t => t.TeamUsers)
+                                        .ThenInclude(tu => tu.User)
+                                    .FirstOrDefault(t => t.TeamId == id);
 
             if (team == null)
             {
@@ -240,9 +240,9 @@ namespace aspApi.Controllers
             var teamUser = team.TeamUsers;
             foreach (var i in teamUser)
             {
-                    Console.WriteLine(teamId + " " + userId);   
                 if (i.UserId == userId && i.TeamId == teamId)
                 {
+                    Console.WriteLine(teamId + " " + userId +" " + i.Role);   
                     return true;
                 }
              

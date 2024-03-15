@@ -19,14 +19,15 @@ namespace aspApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-
     public class UsersController : ControllerBase
     {
+    private readonly IHttpContextAccessor contextAccesser;
         private readonly MyDbContext _context;
 
-        public UsersController(MyDbContext context)
+        public UsersController(MyDbContext context, IHttpContextAccessor contextAccesser)
         {
             _context = context;
+            this.contextAccesser = contextAccesser; 
         }
 
         // GET: api/Users
@@ -160,6 +161,39 @@ namespace aspApi.Controllers
 
             return NoContent();
         }
+        /* [HttpPost("login")]
+         public IActionResult Validate(LoginModel model)
+         {
+             var user = _context.User.SingleOrDefault(p => p.UserName == model.Username && model.Password == p.Password);
+
+             if (user == null)
+             {
+                 return Ok(new ApiReponse
+                 {
+                     IsSuccess = false,
+                     Message = "Invalid username or password"
+                 });
+             }
+
+             var teamUser = _context.TeamUsers
+                                 .Include(tu => tu.Team)
+                                 .FirstOrDefault(tu => tu.UserId == user.UserId);
+             var teamUserCount = _context.TeamUsers.Count(tu => tu.UserId == user.UserId);
+             Console.WriteLine(teamUserCount);
+             if (teamUser == null)
+             {
+                 // Handle the case where the user is not associated with any team
+                 // You might want to return an error response or handle it according to your business logic.
+             }
+
+             return Ok(new ApiReponse
+             {
+                 IsSuccess = true,
+                 Message = "Authen success" + teamUser.Role,
+                 //Data = teamUser.Role
+                 Data = GenerateToken(user, teamUser.Role)
+             }) ;  
+         }*/
         [HttpPost("login")]
         public IActionResult Validate(LoginModel model)
         {
@@ -173,25 +207,87 @@ namespace aspApi.Controllers
                     Message = "Invalid username or password"
                 });
             }
+            var defaultRole = "DefaultRole";
+            var token = GenerateToken(user, defaultRole);
 
-            var teamUser = _context.TeamUsers
+            // Lấy danh sách các team mà người dùng thuộc về
+            var teamUsers = _context.TeamUsers
                                 .Include(tu => tu.Team)
-                                .FirstOrDefault(tu => tu.UserId == user.UserId);
+                                .Where(tu => tu.UserId == user.UserId)
+                                .ToList();
+
+            if (teamUsers.Count == 0)
+            {
+                return Ok(new ApiReponse
+                {
+                    IsSuccess = false,
+                    Message = "User is not associated with any team",
+                }) ;
+            }
+            // Trong action xử lý đăng nhập
+            HttpContext.Session.SetInt32("UserId", user.UserId);
+
+
+            // Tạo danh sách các vai trò dựa trên các team mà người dùng thuộc về
+            var roles = teamUsers.Select(tu => tu.Role).Distinct().ToList();
+
+            // Trả về danh sách các vai trò cho người dùng chọn
+            return Ok(new ApiReponse
+            {
+                IsSuccess = true,
+                Message = "Please select a role",
+                Data = new { Roles = roles } + " "  + token
+            }); 
+        }
+        [HttpPost("login/with-role")]
+        public IActionResult ValidateWithRole(int teamId)
+        {
+            var userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+
+                return Ok(new ApiReponse
+                {
+                    IsSuccess = false,
+                    Message = "User is not authenticated"
+                });
+            }
+            // Tìm vai trò hiện tại của người dùng cho team đã chọn
+            var teamUser = _context.TeamUsers
+                                .FirstOrDefault(tu => tu.UserId == userId && tu.TeamId == teamId);
 
             if (teamUser == null)
             {
-                // Handle the case where the user is not associated with any team
-                // You might want to return an error response or handle it according to your business logic.
+                return Ok(new ApiReponse
+                {
+                    IsSuccess = false,
+                    Message = "User is not associated with the selected team"
+                });
             }
+
+            // Lấy vai trò của người dùng cho team đã chọn
+            string userRole = teamUser.Role;
+
+            // Tạo token với vai trò của người dùng cho team đã chọn
+         
+           /* if (user == null)
+            {
+                return Ok(new ApiReponse
+                {
+                    IsSuccess = false,
+                    Message = "User not found"
+                });
+            }*/
+            var token = GenerateToken(_context.User.FirstOrDefault(t => t.UserId == userId), userRole);
 
             return Ok(new ApiReponse
             {
-                IsSuccess = true, 
-                Message = "Authen success with " + teamUser.Role,
-                //Data = teamUser.Role
-                Data = GenerateToken(user, teamUser.Role)
+                IsSuccess = true,
+                Message = "Authentication successful " + userRole + " " + " with TeamId: " + teamId  ,
+                Data = new { Token = token }
             });
         }
+
 
         private string GenerateToken(User user, string userRole)
         {
@@ -218,10 +314,6 @@ namespace aspApi.Controllers
 
             return jwtTokenHandler.WriteToken(token);
         }
-
-
-
-
         private bool UserExists(int id)
         {
             return _context.User.Any(e => e.UserId == id);

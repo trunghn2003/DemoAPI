@@ -35,6 +35,12 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 
 
 builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSingleton<IHttpContextAccessor, HttpContextAccessor>();
+builder.Services.AddDistributedMemoryCache();
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(120);
+});
 //builder.Services.AddSwaggerGen();
 builder.Services.AddSwaggerGen(opt =>
 {
@@ -48,7 +54,7 @@ builder.Services.AddSwaggerGen(opt =>
         BearerFormat = "JWT",
         Scheme = "bearer"
     });
-
+    
     opt.AddSecurityRequirement(new OpenApiSecurityRequirement
     {
         {
@@ -65,6 +71,7 @@ builder.Services.AddSwaggerGen(opt =>
     });
 });
 
+
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
@@ -74,7 +81,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-
+app.UseSession();   
 app.UseAuthorization();
 
 app.MapControllers();
