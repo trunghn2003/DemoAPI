@@ -1,6 +1,6 @@
 ﻿namespace aspApi.DTO
 {
-    public class TeamUserDto
+    public class TeamUserDTO
     {
         //public int TeamUserId { get; set; }
         public int TeamId { get; set; }

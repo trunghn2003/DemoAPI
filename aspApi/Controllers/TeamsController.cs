@@ -69,6 +69,7 @@ namespace aspApi.Controllers
 
             // Update team properties with values from teamDTO
             team.Name = teamDTO.Name;
+            team.IsPublic = teamDTO.IsPublic;
 
             try
             {
@@ -121,7 +122,9 @@ namespace aspApi.Controllers
             // Map TeamDTO to Team entity
             var team = new Team
             {
-                Name = teamDTO.Name
+                Name = teamDTO.Name,
+                IsPublic = teamDTO.IsPublic
+
             };
 
             // Add and save the new Team entity
@@ -130,13 +133,14 @@ namespace aspApi.Controllers
 
             // Return the created Team
             return CreatedAtAction(nameof(GetTeam), new { id = team.TeamId }, team);
+
         }
 
-        
-    
 
-    // DELETE: api/Teams/5
-    [HttpDelete("{id}")]
+
+
+        // DELETE: api/Teams/5
+        [HttpDelete("{id}")]
     [Authorize(Roles = "Admin")]
 
         public async Task<IActionResult> DeleteTeam(int id)
@@ -150,7 +154,7 @@ namespace aspApi.Controllers
             _context.Teams.Remove(team);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok($"Da xoa thanh cong teamId: {id}");
         }
         public class UserInTeamDto
         {

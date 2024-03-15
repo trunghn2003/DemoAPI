@@ -140,7 +140,7 @@ namespace aspApi.Controllers
             //    await _context.SaveChangesAsync();
             //}
 
-            return CreatedAtAction("GetUser", new { id = user.UserId }, user);
+            return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, user);
         }
 
 
@@ -219,7 +219,7 @@ namespace aspApi.Controllers
             {
                 return Ok(new ApiReponse
                 {
-                    IsSuccess = false,
+                    IsSuccess = true,
                     Message = "User is not associated with any team",
                 }) ;
             }

@@ -21,7 +21,7 @@ namespace aspApi.Controllers
         {
             _context = context;
         }
-        
+
         // GET: api/TeamUsers
         [HttpGet]
         [Authorize(Roles = "Admin, User")]
@@ -48,7 +48,7 @@ namespace aspApi.Controllers
         // POST: api/TeamUsers
         [HttpPost]
         [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<TeamUser>> PostTeamUser(TeamUserDto teamUserDto)
+        public async Task<ActionResult<TeamUser>> PostTeamUser(TeamUserDTO teamUserDto)
         {
             var team = await _context.Teams.FindAsync(teamUserDto.TeamId);
             if (team == null)
@@ -81,7 +81,7 @@ namespace aspApi.Controllers
             await _context.SaveChangesAsync();
 
             // Return the created TeamUser entity
-            return CreatedAtAction("Get ", new { id = teamUser.TeamId }, teamUser);
+            return CreatedAtAction(nameof(GetTeamUsers), new { id = teamUser.TeamId }, teamUser);
         }
 
         // DELETE: api/TeamUsers/5
