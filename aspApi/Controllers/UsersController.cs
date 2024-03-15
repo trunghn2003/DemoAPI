@@ -207,8 +207,7 @@ namespace aspApi.Controllers
                     Message = "Invalid username or password"
                 });
             }
-            var defaultRole = "DefaultRole";
-            var token = GenerateToken(user, defaultRole);
+           
 
             // Lấy danh sách các team mà người dùng thuộc về
             var teamUsers = _context.TeamUsers
@@ -236,7 +235,7 @@ namespace aspApi.Controllers
             {
                 IsSuccess = true,
                 Message = "Please select a role",
-                Data = new { Roles = roles } + " "  + token
+                Data = new { Roles = roles } 
             }); 
         }
         [HttpPost("login/with-role")]

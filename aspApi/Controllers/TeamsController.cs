@@ -210,12 +210,36 @@ namespace aspApi.Controllers
             }
 
             var userId = GetUserIdFromClaims(HttpContext.User);
-            Console.WriteLine(userId);
+            //var userId = GetUserIdFromClaims(HttpContext.User);
+            var teamUsers = await _context.TeamUsers.Where(t => t.TeamId == id).ToListAsync();
+
+            if (teamUsers == null || !teamUsers.Any())
+            {
+                Console.WriteLine("No team users found for the team");
+            }
+            else
+            {
+                
+                foreach (var teamUser in teamUsers)
+                {
+                    if(teamUser.UserId == userId && teamUser.TeamId ==id) {
+                        if(teamUser.Role != "Admin")
+                        {
+                            //Console.WriteLine("ko dc");
+                            return BadRequest("You don't have Permission");
+                        }
+                    }
+                }
+            }
+
+
+            //Console.WriteLine(userId);
 
             if(IsUserAuthorizedForTeam(HttpContext.User, team) == false)
             {
                 return BadRequest("it doesnt belong to this team");
             }
+
             
 
             team.IsPublic = isPublic;

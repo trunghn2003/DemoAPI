@@ -164,17 +164,17 @@ namespace aspApi.Controllers
             //Console.WriteLine(currentUser.ToJson);
             if (!IsUserAuthorizedForTeam(currentUser, team))
             {
-                return Forbid(); // Hoặc có thể trả về NotFound() tùy thuộc vào logic ứng dụng của bạn
+                return Forbid("ban ko co quyen truy nhap team nay"); // Hoặc có thể trả về NotFound() tùy thuộc vào logic ứng dụng của bạn
             }
             var todoItems = await _context.Teams
                 .Where(t => t.TeamId == teamId)
                 .SelectMany(t => t.TodoItems)
                 .ToListAsync();
 
-            if (todoItems == null || todoItems.Count == 0)
+           /* if (todoItems == null || todoItems.Count == 0)
             {
                 return NotFound();
-            }
+            }*/
             return Ok(todoItems);
  
         }
@@ -182,11 +182,8 @@ namespace aspApi.Controllers
 
         private  bool IsUserAuthorizedForTeam(ClaimsPrincipal user, Team team)
         {
-            // Kiểm tra xem người dùng có vai trò "Admin" không
-            if (user.IsInRole("Admin"))
-            {
-                return true;
-            }
+          
+           
 
             // Kiểm tra xem người dùng có là thành viên của nhóm không
             var userId = GetUserIdFromClaims(user);
@@ -196,7 +193,7 @@ namespace aspApi.Controllers
             foreach(var i in teamUser)
             {
                 if (i.UserId == userId && i.TeamId == teamId) return true;
-                else return false;
+                
             }
             //var teamUser = team.TeamUsers;
             //int tmp = 0;
