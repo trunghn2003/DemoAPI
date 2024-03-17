@@ -265,7 +265,7 @@ namespace aspApi.Controllers
                 return Ok(new ApiReponse
                 {
                     IsSuccess = false,
-                    Message = "User not found"
+                    Message = "User not login"
                 });
             }*//*
             var token = GenerateToken(_context.User.FirstOrDefault(t => t.UserId == userId), userRole);
