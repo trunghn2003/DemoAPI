@@ -14,6 +14,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authorization;
 using aspApi.DTO;
 using Microsoft.Exchange.WebServices.Data;
+using Microsoft.DotNet.Scaffolding.Shared.Messaging;
 
 namespace aspApi.Controllers
 {
@@ -32,16 +33,13 @@ namespace aspApi.Controllers
 
         // GET: api/Users
         [HttpGet]
-        [Authorize(Roles = "Admin, User")]
-
-
         public async Task<ActionResult<IEnumerable<User>>> GetUser()
         {
             return await _context.User.ToListAsync();
         }
 
         // GET: api/Users/5
-        [HttpGet("{id}")]
+        /*[HttpGet("{id}")]
         [Authorize(Roles = "Admin, User")]
 
         public async Task<ActionResult<User>> GetUser(int id)
@@ -55,15 +53,12 @@ namespace aspApi.Controllers
 
             return user;
         }
-
+*/
         // PUT: api/Users/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPut("{id}")]
         //[Authorize(Roles = "Admin")]
-        [Authorize(Roles = "Admin")]
-
-
-
+        /*[Authorize(Roles = "Admin")]*/
         public async Task<IActionResult> PutUser(int id, UserDTO userDTO)
         {
             if (id != userDTO.UserId)
@@ -98,7 +93,7 @@ namespace aspApi.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok("Put successfully");
         }
 
         
@@ -108,9 +103,6 @@ namespace aspApi.Controllers
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
         //[Authorize(Roles = "Admin")]
-        [Authorize(Roles = "Admin")]
-
-
         public async Task<ActionResult<User>> PostUser(UserDTO createUserDTO)
         {
             var user = new User
@@ -142,12 +134,9 @@ namespace aspApi.Controllers
 
             return CreatedAtAction(nameof(GetUser), new { id = user.UserId }, user);
         }
-
-
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
-        [Authorize(Roles = "Admin")]
-
+   /*     [Authorize(Roles = "Admin")]*/
         public async Task<IActionResult> DeleteUser(int id)
         {
             var user = await _context.User.FindAsync(id);
@@ -159,7 +148,7 @@ namespace aspApi.Controllers
             _context.User.Remove(user);
             await _context.SaveChangesAsync();
 
-            return NoContent();
+            return Ok("Delete success");
         }
         /* [HttpPost("login")]
          public IActionResult Validate(LoginModel model)
@@ -207,10 +196,11 @@ namespace aspApi.Controllers
                     Message = "Invalid username or password"
                 });
             }
+            HttpContext.Session.SetInt32("UserId", user.UserId);
            
 
             // Lấy danh sách các team mà người dùng thuộc về
-            var teamUsers = _context.TeamUsers
+           /* var teamUsers = _context.TeamUsers
                                 .Include(tu => tu.Team)
                                 .Where(tu => tu.UserId == user.UserId)
                                 .ToList();
@@ -222,23 +212,24 @@ namespace aspApi.Controllers
                     IsSuccess = true,
                     Message = "User is not associated with any team",
                 }) ;
-            }
+            }*/
             // Trong action xử lý đăng nhập
-            HttpContext.Session.SetInt32("UserId", user.UserId);
 
 
             // Tạo danh sách các vai trò dựa trên các team mà người dùng thuộc về
-            var roles = teamUsers.Select(tu => tu.Role).Distinct().ToList();
+           /* var roles = teamUsers.Select(tu => tu.Role).Distinct().ToList();*/
 
             // Trả về danh sách các vai trò cho người dùng chọn
             return Ok(new ApiReponse
             {
                 IsSuccess = true,
-                Message = "Please select a role",
-                Data = new { Roles = roles } 
+                Message = "",
+                Data = Ok(user)
+                
+               /* Data = new { Roles = roles } */
             }); 
         }
-        [HttpPost("login/with-role")]
+        /*[HttpPost("login/with-role")]
         public IActionResult ValidateWithRole(int teamId)
         {
             var userId = HttpContext.Session.GetInt32("UserId");
@@ -269,14 +260,14 @@ namespace aspApi.Controllers
 
             // Tạo token với vai trò của người dùng cho team đã chọn
          
-           /* if (user == null)
+           *//* if (user == null)
             {
                 return Ok(new ApiReponse
                 {
                     IsSuccess = false,
                     Message = "User not found"
                 });
-            }*/
+            }*//*
             var token = GenerateToken(_context.User.FirstOrDefault(t => t.UserId == userId), userRole);
 
             return Ok(new ApiReponse
@@ -285,7 +276,7 @@ namespace aspApi.Controllers
                 Message = "Authentication successful " + userRole + " " + " with TeamId: " + teamId  ,
                 Data = new { Token = token }
             });
-        }
+        }*/
 
 
         private string GenerateToken(User user, string userRole)

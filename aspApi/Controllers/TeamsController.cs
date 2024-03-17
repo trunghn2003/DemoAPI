@@ -12,6 +12,7 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using aspApi.DTO;
 using System.Security.Claims;
+using System.Numerics;
 
 namespace aspApi.Controllers
 {
@@ -36,7 +37,7 @@ namespace aspApi.Controllers
         }
 
         // GET: api/Teams/5
-        [HttpGet("{id}")]
+       /* [HttpGet("{id}")]
         [Authorize(Roles = "Admin, User")]
         public async Task<ActionResult<Team>> GetTeam(int id)
         {
@@ -48,7 +49,7 @@ namespace aspApi.Controllers
             }
 
             return team;
-        }
+        }*/
 
         // PUT: api/Teams/5
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
@@ -87,7 +88,7 @@ namespace aspApi.Controllers
                 }
             }
 
-            return NoContent();
+            return Ok(team);
         }
 
         // POST: api/Teams
@@ -132,7 +133,7 @@ namespace aspApi.Controllers
             await _context.SaveChangesAsync();
 
             // Return the created Team
-            return CreatedAtAction(nameof(GetTeam), new { id = team.TeamId }, team);
+            return CreatedAtAction(nameof(GetTeams), new { id = team.TeamId }, team);
 
         }
 
@@ -141,14 +142,14 @@ namespace aspApi.Controllers
 
         // DELETE: api/Teams/5
         [HttpDelete("{id}")]
-    [Authorize(Roles = "Admin")]
+        [Authorize(Roles = "Admin")]
 
         public async Task<IActionResult> DeleteTeam(int id)
         {
             var team = await _context.Teams.FindAsync(id);
             if (team == null)
             {
-                return NotFound();
+                return NotFound("not found TeamId");
             }
 
             _context.Teams.Remove(team);
@@ -165,43 +166,49 @@ namespace aspApi.Controllers
         }
 
 
-        [HttpGet("{id}/users")]
-        [Authorize(Roles = "Admin, User")]
-        public ActionResult<IEnumerable<UserInTeamDto>> GetUsersForTeam(int id)
+         
+        //get user from teamId
+        [HttpGet("{id}/getUser")]
+        public ActionResult<IEnumerable<UserInTeamDto>> GetUsersForTeamId(int id)
         {
             var currentUser = HttpContext.User;
-                var team = _context.Teams
-                                    .Include(t => t.TeamUsers)
-                                        .ThenInclude(tu => tu.User)
-                                    .FirstOrDefault(t => t.TeamId == id);
+            var team = _context.Teams
+                                .Include(t => t.TeamUsers)
+                                    .ThenInclude(tu => tu.User)
+                                .FirstOrDefault(t => t.TeamId == id);
 
             if (team == null)
             {
                 return NotFound("Team not found");
             }
+
+
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return NotFound("User not found");  
+            }
             if (!team.IsPublic)
             {
                 if (!IsUserAuthorizedForTeam(currentUser, team))
                 {
-                    return Forbid("may ko thuoc ve team nay"); // Hoặc NotFound() tùy thuộc vào logic ứng dụng của bạn
+                    return Forbid("This is private, you dont belong to it"); // Hoặc NotFound() tùy thuộc vào logic ứng dụng của bạn
                 }
+
             }
-            
-
-            // Kiểm tra xem người dùng có quyền truy cập vào nhóm không
-           
-
-            var usersInTeam = team.TeamUsers.Select(tu => new UserInTeamDto
+            var userInTeam = team.TeamUsers.Select(tu => new UserInTeamDto
             {
                 UserId = tu.User.UserId,
                 UserName = tu.User.UserName,
                 Role = tu.Role
             }).ToList();
 
-            return Ok(usersInTeam);
+
+            return Ok(userInTeam);
+
         }
         [HttpPut("{id}/privacy")]
-        [Authorize(Roles = "Admin")]
+        //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTeamPrivacy(int id, bool isPublic)
         {
             var team = await _context.Teams
@@ -255,14 +262,8 @@ namespace aspApi.Controllers
 
         private bool IsUserAuthorizedForTeam(ClaimsPrincipal user, Team team)
         {
-            // Kiểm tra xem người dùng có vai trò "Admin" không
-            /* if (user.IsInRole("Admin"))
-             {
-                 return true;
-             }*/
-
-            // Kiểm tra xem người dùng có là thành viên của nhóm không
-            var userId = GetUserIdFromClaims(user);
+           
+            var userId = HttpContext.Session.GetInt32("UserId").Value;
             var teamId = team.TeamId;
             Console.WriteLine(userId + " " + teamId);
             var teamUser = team.TeamUsers;
