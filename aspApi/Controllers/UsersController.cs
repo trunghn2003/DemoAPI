@@ -59,14 +59,19 @@ namespace aspApi.Controllers
         [HttpPut("{id}")]
         //[Authorize(Roles = "Admin")]
         /*[Authorize(Roles = "Admin")]*/
-        public async Task<IActionResult> PutUser(int id, UserDTO userDTO)
+        public async Task<IActionResult> PutUser(UserDTO userDTO)
         {
-            if (id != userDTO.UserId)
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
             {
-                return BadRequest();
+                return NotFound("User not login");
             }
+            if(userId.Value != userDTO.UserId) {
+                return BadRequest("u dont have permission");
+            }
+            
 
-            var user = await _context.User.FindAsync(id);
+            var user = await _context.User.FindAsync(userDTO.UserId);
             if (user == null)
             {
                 return NotFound();
@@ -83,7 +88,7 @@ namespace aspApi.Controllers
             }
             catch (DbUpdateConcurrencyException)
             {
-                if (!UserExists(id))
+                if (!UserExists(userDTO.UserId))
                 {
                     return NotFound();
                 }
@@ -102,9 +107,11 @@ namespace aspApi.Controllers
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
         [HttpPost]
-        //[Authorize(Roles = "Admin")]
+       
         public async Task<ActionResult<User>> PostUser(UserDTO createUserDTO)
         {
+
+
             var user = new User
             {
                 Name = createUserDTO.Name,
@@ -136,14 +143,27 @@ namespace aspApi.Controllers
         }
         // DELETE: api/Users/5
         [HttpDelete("{id}")]
-   /*     [Authorize(Roles = "Admin")]*/
+ 
         public async Task<IActionResult> DeleteUser(int id)
         {
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return NotFound("User not login");
+            }
+            if (userId.Value != id)
+            {
+                return BadRequest("u dont have permission");
+            }
+
+
             var user = await _context.User.FindAsync(id);
             if (user == null)
             {
                 return NotFound();
             }
+
+            
 
             _context.User.Remove(user);
             await _context.SaveChangesAsync();
@@ -199,86 +219,15 @@ namespace aspApi.Controllers
             HttpContext.Session.SetInt32("UserId", user.UserId);
            
 
-            // Lấy danh sách các team mà người dùng thuộc về
-           /* var teamUsers = _context.TeamUsers
-                                .Include(tu => tu.Team)
-                                .Where(tu => tu.UserId == user.UserId)
-                                .ToList();
-
-            if (teamUsers.Count == 0)
-            {
-                return Ok(new ApiReponse
-                {
-                    IsSuccess = true,
-                    Message = "User is not associated with any team",
-                }) ;
-            }*/
-            // Trong action xử lý đăng nhập
-
-
-            // Tạo danh sách các vai trò dựa trên các team mà người dùng thuộc về
-           /* var roles = teamUsers.Select(tu => tu.Role).Distinct().ToList();*/
-
-            // Trả về danh sách các vai trò cho người dùng chọn
             return Ok(new ApiReponse
             {
                 IsSuccess = true,
-                Message = "",
+                Message = "Login success",
                 Data = Ok(user)
                 
-               /* Data = new { Roles = roles } */
+             
             }); 
         }
-        /*[HttpPost("login/with-role")]
-        public IActionResult ValidateWithRole(int teamId)
-        {
-            var userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-
-                return Ok(new ApiReponse
-                {
-                    IsSuccess = false,
-                    Message = "User is not authenticated"
-                });
-            }
-            // Tìm vai trò hiện tại của người dùng cho team đã chọn
-            var teamUser = _context.TeamUsers
-                                .FirstOrDefault(tu => tu.UserId == userId && tu.TeamId == teamId);
-
-            if (teamUser == null)
-            {
-                return Ok(new ApiReponse
-                {
-                    IsSuccess = false,
-                    Message = "User is not associated with the selected team"
-                });
-            }
-
-            // Lấy vai trò của người dùng cho team đã chọn
-            string userRole = teamUser.Role;
-
-            // Tạo token với vai trò của người dùng cho team đã chọn
-         
-           *//* if (user == null)
-            {
-                return Ok(new ApiReponse
-                {
-                    IsSuccess = false,
-                    Message = "User not login"
-                });
-            }*//*
-            var token = GenerateToken(_context.User.FirstOrDefault(t => t.UserId == userId), userRole);
-
-            return Ok(new ApiReponse
-            {
-                IsSuccess = true,
-                Message = "Authentication successful " + userRole + " " + " with TeamId: " + teamId  ,
-                Data = new { Token = token }
-            });
-        }*/
-
-
         private string GenerateToken(User user, string userRole)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();
