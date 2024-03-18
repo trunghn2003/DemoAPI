@@ -68,7 +68,7 @@ namespace aspApi.Controllers
 
             // PUT: api/Teams/5
             // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-            [HttpPut("{id}")]
+        [HttpPut("{id}")]
         public async Task<IActionResult> PutTeam(int id, TeamDTO teamDTO)
         {
             var team = await _context.Teams
@@ -235,84 +235,8 @@ namespace aspApi.Controllers
 
 
 
-        //get user from teamId
-        [HttpGet("{id}/getUser")]
-        public ActionResult<IEnumerable<UserInTeamDto>> GetUsersForTeamId(int id)
-        {
-
-            var team = _context.Teams
-                                .Include(t => t.TeamUsers)
-                                    .ThenInclude(tu => tu.User)
-                                .FirstOrDefault(t => t.TeamId == id);
-
-            if (team == null)
-            {
-                return NotFound("Team not found");
-            }
-
-
-            int? userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return NotFound("User not login");
-            }
-            if (!team.IsPublic)
-            {
-                if (!IsUserAuthorizedForTeam(team))
-                {
-                    return Forbid("This is private, you dont belong to it"); // Hoặc NotFound() tùy thuộc vào logic ứng dụng của bạn
-                }
-
-            }
-            var userInTeam = team.TeamUsers.Select(tu => new UserInTeamDto
-            {
-                UserId = tu.User.UserId,
-                UserName = tu.User.UserName,
-                Role = tu.Role
-            }).ToList();
-
-
-            return Ok(userInTeam);
-
-        }
-        [HttpGet("{id}/GetToDoItems")]
-      
-        public async Task<ActionResult<IEnumerable<TodoItemDto>>> GetTodoItemsForTeam(int id)
-        {
-            var team = _context.Teams
-                                .Include(t => t.TeamUsers)
-                                    .ThenInclude(tu => tu.User)
-                                .FirstOrDefault(t => t.TeamId == id);
-
-            if (team == null)
-            {
-                return NotFound("Team not found");
-            }
-
-
-            int? userId = HttpContext.Session.GetInt32("UserId");
-            if (!userId.HasValue)
-            {
-                return NotFound("User not login");
-            }
-            if (!team.IsPublic)
-            {
-                if (!IsUserAuthorizedForTeam(team))
-                {
-                    return Forbid("This is private, you dont belong to it"); // Hoặc NotFound() tùy thuộc vào logic ứng dụng của bạn
-                }
-
-            }
-            var todoItems = await _context.Teams
-                 .Where(t => t.TeamId == id)
-                 .SelectMany(t => t.TodoItems)
-                 .ToListAsync();
-
-
-            return Ok(todoItems);
-
-
-        }
+        
+        
         [HttpPut("{id}/privacy")]
         //[Authorize(Roles = "Admin")]
         public async Task<IActionResult> UpdateTeamPrivacy(int id, bool isPublic)

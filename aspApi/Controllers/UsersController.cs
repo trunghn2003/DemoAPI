@@ -15,6 +15,7 @@ using Microsoft.AspNetCore.Authorization;
 using aspApi.DTO;
 using Microsoft.Exchange.WebServices.Data;
 using Microsoft.DotNet.Scaffolding.Shared.Messaging;
+using static aspApi.Controllers.TeamsController;
 
 namespace aspApi.Controllers
 {
@@ -106,7 +107,7 @@ namespace aspApi.Controllers
 
         // POST: api/Users
         // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPost]
+        [HttpPost("/register")]
        
         public async Task<ActionResult<User>> PostUser(UserDTO createUserDTO)
         {
@@ -228,6 +229,65 @@ namespace aspApi.Controllers
              
             }); 
         }
+        //get user from teamId
+        [HttpGet("{teamId}/getUser")]
+        public ActionResult<IEnumerable<UserInTeamDto>> GetUsersForTeamId(int teamId)
+        {
+
+            var team = _context.Teams
+                                .Include(t => t.TeamUsers)
+                                    .ThenInclude(tu => tu.User)
+                                .FirstOrDefault(t => t.TeamId == teamId);
+
+            if (team == null)
+            {
+                return NotFound("Team not found");
+            }
+
+
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return NotFound("User not login");
+            }
+            if (!team.IsPublic)
+            {
+                if (!IsUserAuthorizedForTeam(team))
+                {
+                    return Forbid("This is private, you dont belong to it"); // Hoặc NotFound() tùy thuộc vào logic ứng dụng của bạn
+                }
+
+            }
+            var userInTeam = team.TeamUsers.Select(tu => new UserInTeamDto
+            {
+                UserId = tu.User.UserId,
+                UserName = tu.User.UserName,
+                Role = tu.Role
+            }).ToList();
+
+
+            return Ok(userInTeam);
+
+        }
+        private bool IsUserAuthorizedForTeam(Team team)
+        {
+
+            var userId = HttpContext.Session.GetInt32("UserId").Value;
+            var teamId = team.TeamId;
+            Console.WriteLine(userId + " " + teamId);
+            var teamUser = team.TeamUsers;
+            foreach (var i in teamUser)
+            {
+                if (i.UserId == userId && i.TeamId == teamId)
+                {
+                    Console.WriteLine(teamId + " " + userId + " " + i.Role);
+                    return true;
+                }
+
+            }
+            return false;
+        }
+
         private string GenerateToken(User user, string userRole)
         {
             var jwtTokenHandler = new JwtSecurityTokenHandler();

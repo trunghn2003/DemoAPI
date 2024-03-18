@@ -235,6 +235,62 @@ namespace aspApi.Controllers
 
             return Ok(todoItem);
         }
+        [HttpGet("{teamId}/GetToDoItems")]
+
+        public async Task<ActionResult<IEnumerable<TodoItemDto>>> GetTodoItemsForTeam(int teamId)
+        {
+            var team = _context.Teams
+                                .Include(t => t.TeamUsers)
+                                    .ThenInclude(tu => tu.User)
+                                .FirstOrDefault(t => t.TeamId == teamId);
+
+            if (team == null)
+            {
+                return NotFound("Team not found");
+            }
+
+
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return NotFound("User not login");
+            }
+            if (!team.IsPublic)
+            {
+                if (!IsUserAuthorizedForTeam(team))
+                {
+                    return Forbid("This is private, you dont belong to it"); // Hoặc NotFound() tùy thuộc vào logic ứng dụng của bạn
+                }
+
+            }
+            var todoItems = await _context.Teams
+                 .Where(t => t.TeamId == teamId)
+                 .SelectMany(t => t.TodoItems)
+                 .ToListAsync();
+
+
+            return Ok(todoItems);
+
+
+        }
+        private bool IsUserAuthorizedForTeam(Team team)
+        {
+
+            var userId = HttpContext.Session.GetInt32("UserId").Value;
+            var teamId = team.TeamId;
+            Console.WriteLine(userId + " " + teamId);
+            var teamUser = team.TeamUsers;
+            foreach (var i in teamUser)
+            {
+                if (i.UserId == userId && i.TeamId == teamId)
+                {
+                    Console.WriteLine(teamId + " " + userId + " " + i.Role);
+                    return true;
+                }
+
+            }
+            return false;
+        }
 
         private bool TodoItemExists(long id)
         {
