@@ -27,33 +27,48 @@ namespace aspApi.Controllers
             _context = context;
         }
 
-        // GET: api/Teams
-       /* [HttpGet]
-        [Authorize(Roles = "Admin, User")]
-
-        public async Task<ActionResult<IEnumerable<Team>>> GetTeams()
+        [HttpGet("id")]
+        public async Task<ActionResult<User>> GetTeam(int id)
         {
-            return await _context.Teams.ToListAsync();
-        }*/
+            var team = await _context.Teams
+             .Include(t => t.TeamUsers)
+             .FirstOrDefaultAsync(t => t.TeamId == id);
 
-        // GET: api/Teams/5
-        /* [HttpGet("{id}")]
-         [Authorize(Roles = "Admin, User")]
-         public async Task<ActionResult<Team>> GetTeam(int id)
-         {
-             var team = await _context.Teams.FindAsync(id);
+            if (team == null)
+            {
+                return NotFound("Team not found");
+            }
 
-             if (team == null)
-             {
-                 return NotFound();
-             }
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
+            {
+                return NotFound("User not login");
+            }
+            var teamUsers = await _context.TeamUsers.Where(t => t.TeamId == id).ToListAsync();
+            if (teamUsers == null || !teamUsers.Any())
+            {
+                Console.WriteLine("No team users found for the team");
+            }
+            else
+            {
 
-             return team;
-         }*/
+                foreach (var teamUser in teamUsers)
+                {
+                    if (teamUser.UserId == userId && teamUser.TeamId == id)
+                    {
 
-        // PUT: api/Teams/5
-        // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
-        [HttpPut("{id}")]
+                        return Ok(team);
+                        
+                    }
+                }
+            }
+            return BadRequest("Yon dont belong to this team");
+
+        }
+
+            // PUT: api/Teams/5
+            // To protect from overposting attacks, see https://go.microsoft.com/fwlink/?linkid=2123754
+            [HttpPut("{id}")]
         public async Task<IActionResult> PutTeam(int id, TeamDTO teamDTO)
         {
             var team = await _context.Teams
@@ -169,8 +184,8 @@ namespace aspApi.Controllers
         public async Task<IActionResult> DeleteTeam(int id)
         {
             var team = await _context.Teams
-     .Include(t => t.TeamUsers)
-     .FirstOrDefaultAsync(t => t.TeamId == id);
+             .Include(t => t.TeamUsers)
+             .FirstOrDefaultAsync(t => t.TeamId == id);
 
             if (team == null)
             {
@@ -345,6 +360,7 @@ namespace aspApi.Controllers
             }
                     return BadRequest("Yon dont belong to this team");
         }
+
         private bool IsUserAuthorizedForTeam(Team team)
         {
 

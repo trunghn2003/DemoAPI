@@ -22,69 +22,96 @@ namespace aspApi.Controllers
             _context = context;
         }
 
-        // GET: api/TeamUsers
-        [HttpGet]
-        [Authorize(Roles = "Admin, User")]
+        
 
-        public async Task<ActionResult<IEnumerable<TeamUser>>> GetTeamUsers()
-        {
-            return await _context.TeamUsers.ToListAsync();
-        }
-
-        // GET: api/TeamUsers/5
-        //[HttpGet("{id}")]
-        //public async Task<ActionResult<TeamUser>> GetTeamUser(int id)
-        //{
-        //    var teamUser = await _context.TeamUsers.FindAsync(id);
-
-        //    if (teamUser == null)
-        //    {
-        //        return NotFound();
-        //    }
-
-        //    return teamUser;
-        //}
-
-        // POST: api/TeamUsers
         [HttpPost]
-        [Authorize(Roles = "Admin")]
-        public async Task<ActionResult<TeamUser>> PostTeamUser(TeamUserDTO teamUserDto)
+        public async Task<ActionResult<TeamUser>> PostTeamUser(int TeamId, TeamUserDTO teamUserDto)
         {
-            var team = await _context.Teams.FindAsync(teamUserDto.TeamId);
+            var team = await _context.Teams
+                .Include(t => t.TeamUsers)
+                .FirstOrDefaultAsync(t => t.TeamId == TeamId);
+
             if (team == null)
             {
-                ModelState.AddModelError("TeamId", "Team not found.");
+                return NotFound("Team not found");
             }
 
-            var user = await _context.User.FindAsync(teamUserDto.UserId);
-            if (user == null)
+            int? userId = HttpContext.Session.GetInt32("UserId");
+            if (!userId.HasValue)
             {
-                ModelState.AddModelError("UserId", "User not found.");
+                return NotFound("User not login");
+            }
+            var teamUsers = await _context.TeamUsers.Where(t => t.TeamId == TeamId).ToListAsync();
+            if (teamUsers == null || !teamUsers.Any())
+            {
+                Console.WriteLine("No team users found for the team");
+            }
+            else
+            {
+
+                foreach (var teamUser in teamUsers)
+                {
+                    if (teamUser.UserId == userId && teamUser.TeamId == TeamId)
+                    {
+                        if (teamUser.Role == "Admin")
+                        {
+                            var newTeamUser = new TeamUser
+                            {
+                                TeamId = TeamId,
+                                UserId= teamUserDto.UserId,
+                                Role = teamUserDto.Role,    
+
+                            };
+                            _context.TeamUsers.Add(newTeamUser);
+                            await _context.SaveChangesAsync();
+
+                            return Ok(newTeamUser);
+                        }
+                        else
+                        {
+                            return BadRequest("You arent Admin");
+                        }
+                    }
+                }
+            }
+            return BadRequest("Yon dont belong to this team");
+           
+        }
+        /*[HttpPut("{teamId}/{userId}")]
+        public async Task<ActionResult<TeamUser>> PutTeamUser(int teamId, int userId, TeamUserDTO teamUserDto)
+        {
+            var team = await _context.Teams
+                 .Include(t => t.TeamUsers)
+                 .FirstOrDefaultAsync(t => t.TeamId == teamId);
+
+            if (team == null)
+            {
+                return NotFound("Team not found");
             }
 
-            // If either team or user is not found, return bad request
-            if (!ModelState.IsValid)
+            int? userIdCur = HttpContext.Session.GetInt32("UserId");
+            if (!userIdCur.HasValue)
             {
-                return BadRequest(ModelState);
+                return NotFound("User not login");
             }
+            var teamUser = await _context.TeamUsers.FindAsync(teamId, userId);
 
-            // Map TeamUserDTO to TeamUser entity
-            var teamUser = new TeamUser
+            if (teamUser == null)
             {
-                TeamId = teamUserDto.TeamId,
-                UserId = teamUserDto.UserId,
-                Role = teamUserDto.Role
-            };
+                return NotFound("TeamUser not found");
+            }
+            teamUser.Role = teamUserDto.Role;
 
-            // Add and save the new TeamUser entity
-            _context.TeamUsers.Add(teamUser);
+          
             await _context.SaveChangesAsync();
 
-            // Return the created TeamUser entity
-            return CreatedAtAction(nameof(GetTeamUsers), new { id = teamUser.TeamId }, teamUser);
-        }
+            
+            return Ok(teamUser);
 
-        // DELETE: api/TeamUsers/5
+           
+        }
+*/
+       /* // DELETE: api/TeamUsers/5
         [HttpDelete("{id}")]
         [Authorize(Roles = "Admin")]
 
@@ -101,7 +128,7 @@ namespace aspApi.Controllers
 
             return NoContent();
         }
-
+*/
         private bool TeamUserExists(int id)
         {
             return _context.TeamUsers.Any(e => e.TeamId == id);
