@@ -229,7 +229,7 @@ namespace aspApi.Controllers
             }
 
             // Xóa TodoItem khỏi Team
-            team.TodoItems.Remove(todoItem);
+            _context.TodoItems.Remove(todoItem);
             
             await _context.SaveChangesAsync();
 
